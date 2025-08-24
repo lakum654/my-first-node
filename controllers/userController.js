@@ -51,44 +51,18 @@ exports.deleteUser = (req, res) => {
   });
 };
 
-// ✅ Login user
-exports.loginUser = (req, res) => {
-  const { email, password } = req.body;
+exports.getProfile = (req, res) => {
+  // req.user comes from token (id, email)
+  const userId = req.user.id;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password required" });
-  }
-
-  // Find user by email
-  User.findByEmail(email, async (err, results) => {
+  // Query DB by ID
+  const query = "SELECT id, name, email FROM users WHERE id = ?";
+  require("../config/db").query(query, [userId], (err, results) => {
     if (err) return res.status(500).json({ error: err });
     if (results.length === 0) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(404).json({ error: "User not found" });
     }
-
-    const user = results[0];
-
-    // Compare password with hashed password in DB
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
-
-    // ✅ Generate JWT Token (valid for 1h)
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET || "mysecret",
-      { expiresIn: "1h" }
-    );
-
-    res.json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    res.json({ user: results[0] });
   });
 };
+
