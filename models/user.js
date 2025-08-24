@@ -21,6 +21,10 @@ const User = {
     );
   },
 
+  findByEmail: (email, callback) => {
+    db.query("SELECT * FROM users WHERE email = ?", [email], callback);
+  },
+
   delete: (id, callback) => {
     db.query("DELETE FROM users WHERE id=?", [id], callback);
   }
